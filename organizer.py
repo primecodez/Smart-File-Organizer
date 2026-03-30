@@ -1,10 +1,16 @@
 import os
 import shutil
 
-# Path to organize (change this)
 SOURCE_FOLDER = "test_folder"
 
-# File type mapping
+# Rule 1: Keyword-based (SMART RULES)
+KEYWORD_RULES = {
+    "invoice": "Finance",
+    "resume": "Career",
+    "assignment": "Study"
+}
+
+# Rule 2: Extension-based (fallback)
 FILE_TYPES = {
     "Images": [".jpg", ".png", ".jpeg"],
     "Documents": [".pdf", ".docx", ".txt"],
@@ -16,13 +22,30 @@ def organize_files():
         file_path = os.path.join(SOURCE_FOLDER, file)
 
         if os.path.isfile(file_path):
-            for folder, extensions in FILE_TYPES.items():
-                if any(file.endswith(ext) for ext in extensions):
-                    
-                    target_folder = os.path.join(SOURCE_FOLDER, folder)
-                    os.makedirs(target_folder, exist_ok=True)
+            file_lower = file.lower()
+            moved = False   # to track if file is already moved
 
-                    shutil.move(file_path, os.path.join(target_folder, file))
-                    print(f"Moved: {file} → {folder}")
+            # 🔥 STEP 1: Check keyword rules FIRST
+            for keyword, folder in KEYWORD_RULES.items():
+                if keyword in file_lower:
+                    move_file(file_path, file, folder)
+                    moved = True
+                    break   # stop checking further
+
+            # 🔥 STEP 2: If no keyword matched → use extension
+            if not moved:
+                for folder, extensions in FILE_TYPES.items():
+                    if any(file_lower.endswith(ext) for ext in extensions):
+                        move_file(file_path, file, folder)
+                        break
+
+def move_file(file_path, file, folder):
+    target_folder = os.path.join(SOURCE_FOLDER, folder)
+    os.makedirs(target_folder, exist_ok=True)
+
+    destination = os.path.join(target_folder, file)
+    shutil.move(file_path, destination)
+
+    print(f"Moved: {file} → {folder}")
 
 organize_files()
